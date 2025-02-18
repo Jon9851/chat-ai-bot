@@ -6,7 +6,7 @@
 }
 
 .start-page-btn{
-    width: 35rem;
+    width: 40rem;
     height: 15rem;
     background:  linear-gradient(135deg, #f42f5f, #8e25bf);
     border: none;
@@ -19,5 +19,11 @@
     letter-spacing: 1rem;
     text-shadow: 0 1rem 2rem rgba(0, 0, 0, .2);
     box-shadow: 0 2rem 5rem rgba(0, 0, 0, .2);
+    cursor: pointer;
+    transition: transform .1s ;
+}
+
+.start-page-btn:active{
+    transform: scale(.98);
 
 }

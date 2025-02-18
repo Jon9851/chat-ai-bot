@@ -3,7 +3,7 @@ import './Chatbotstart.css'
 const ChatbotStart = () => {
   return (
     <div classname="start-page">
-        <button className="start-page-btn">Chat Bot</button>
+        <button className="start-page-btn">Chat AI</button>
 
 
     </div>
