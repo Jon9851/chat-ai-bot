@@ -4,7 +4,7 @@ import Chatbotapp from './assets/components/Chatbotapp'
 const App = () => {
   return (
     <div className="container">
-      <ChatbotStart />
+      {/* <ChatbotStart /> */ }
       <Chatbotapp />
     </div>
   )
