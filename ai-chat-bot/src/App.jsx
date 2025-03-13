@@ -3,32 +3,48 @@ import ChatbotStart from './assets/components/ChatbotStart';
 import Chatbotapp from './assets/components/Chatbotapp';
 
 const App = () => {
-  // Fixed the typo: 'false' instead of 'flase'
   const [isChatting, setIsChatting] = useState(false);
-  const [chats, setChats] = useState ([])
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
 
-  const handleStartChat = ()=> {
-    setIsChatting(true)
+  const handleStartChat = () => {
+    setIsChatting(true);
 
-    if(chats.length === 0){
-      const newChat ={
-        id:`chat ${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString()}`,
-        messages:[]
-      }
+    if (chats.length === 0) {
+      const newChat = {
+        id: `chat ${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString()}`,
+        messages: [],
+      };
       setChats([newChat]);
+      setActiveChat(newChat.id);
     }
-  }
-
+  };
 
   const handleGoBack = () => {
     setIsChatting(false);
   };
 
-  /* Allows the app to determine what page needs to show to the user */
+  const createNewChat = () => {
+    const newChat = {
+      id: `chat ${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString()}`,
+      messages: [],
+    };
+    const updatedChats = [newChat, ...chats];
+    setChats(updatedChats);
+    setActiveChat(newChat.id);
+  };
+
   return (
     <div className="container">
       {isChatting ? (
-        <Chatbotapp onGoBack={handleGoBack} chats={chats} setChats={setChats} /> /* Fixed function name 'handleGoBack' */
+        <Chatbotapp 
+          onGoBack={handleGoBack} 
+          chats={chats} 
+          setChats={setChats} 
+          activeChat={activeChat} 
+          setActiveChat={setActiveChat} 
+          onNewChat={createNewChat} 
+        />
       ) : (
         <ChatbotStart onStartChat={handleStartChat} />
       )}

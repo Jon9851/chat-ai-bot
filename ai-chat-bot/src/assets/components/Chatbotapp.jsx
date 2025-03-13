@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Chatbotapp.css';
 
-const Chatbotapp = ({ onGoBack, chats, setChats }) => {
+const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNewChat
+ }) => {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState(chats[0]?.messages || []);
+
+useEffect(() => {
+  const activeChatObj = chats.find((chat) => chat.id === activeChat)
+  setMessages(activeChatObj ? activeChatObj.messages : []
+  )
+}, [activeChat.chats])
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
@@ -29,7 +36,18 @@ const Chatbotapp = ({ onGoBack, chats, setChats }) => {
       return chat; // Fixed 'chat' instead of 'chats' in return
     });
     setChats(updatedChats);
+    
   };
+  
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  
+
 
   return (
     <div className="chat-app">
@@ -55,7 +73,7 @@ const Chatbotapp = ({ onGoBack, chats, setChats }) => {
         </div>
         <div className="chat">
           {messages.map((message, index) => (
-            <div key={index} className={message.type === 'prompt' ? 'prompt' : 'response'}>
+            <div key={index} className={message.type === "prompt" ? "prompt" : "response"}>
               {message.text} <span>{message.timestamp}</span>
             </div>
           ))}
@@ -78,6 +96,7 @@ const Chatbotapp = ({ onGoBack, chats, setChats }) => {
               placeholder="Type your message"
               value={inputValue}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
             />
             <i className="fa-solid fa-paper-plane" onClick={sendMessage}></i>
           </form>
