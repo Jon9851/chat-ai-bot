@@ -1,23 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import './Chatbotapp.css';
 
-const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNewChat
- }) => {
+const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNewChat }) => {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState(chats[0]?.messages || []);
 
-useEffect(() => {
-  const activeChatObj = chats.find((chat) => chat.id === activeChat)
-  setMessages(activeChatObj ? activeChatObj.messages : []
-  )
-}, [activeChat.chats])
+  useEffect(() => {
+    const activeChatObj = chats.find((chat) => chat.id === activeChat);
+    setMessages(activeChatObj ? activeChatObj.messages : []);
+  }, [activeChat, chats]); // Ensure messages update correctly when activeChat changes
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
 
   const sendMessage = () => {
-    if (inputValue.trim() === '') return; // Fixed trim() check
+    if (inputValue.trim() === '') return; // Avoid sending empty messages
 
     const newMessage = {
       type: 'prompt',
@@ -29,25 +27,35 @@ useEffect(() => {
     setMessages(updatedMessages);
     setInputValue('');
 
-    const updatedChats = chats.map((chat, index) => {
-      if (index === 0) {
+    const updatedChats = chats.map((chat) => {
+      if (chat.id === activeChat) {
         return { ...chat, messages: updatedMessages };
       }
-      return chat; // Fixed 'chat' instead of 'chats' in return
+      return chat;
     });
     setChats(updatedChats);
-    
   };
-  
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault()
-      sendMessage()
+      e.preventDefault();
+      sendMessage();
     }
-  }
+  };
 
-  
+  const handleSelectChat = (id) => {
+    setActiveChat(id);
+  };
 
+  const handleDeleteChat = (id) => {
+    const updatedChats = chats.filter((chat) => chat.id !== id); // Filter out the chat
+    setChats(updatedChats);
+
+    if (id === activeChat) {
+      const newActiveChat = updatedChats.length > 0 ? updatedChats[0].id : null;
+      setActiveChat(newActiveChat);
+    }
+  };
 
   return (
     <div className="chat-app">
@@ -55,12 +63,22 @@ useEffect(() => {
       <div className="chat-list">
         <div className="chat-list-header">
           <h2>Chat List</h2>
-          <i className="bx bx-edit-alt new-chat"></i>
+          <i className="bx bx-edit-alt new-chat" onClick={onNewChat}></i>
         </div>
-        {chats.map((chat, index) => (
-          <div key={index} className={`chat-list-item ${index === 0 ? 'active' : ''}`}>
-            <h4>{chat.id}</h4>
-            <i className="bx bx-x-circle"></i>
+        {chats.map((chat) => (
+          <div
+            key={chat.id} // Using chat.id as the unique key here
+            className={`chat-list-item ${chat.id === activeChat ? 'active' : ''}`}
+            onClick={() => handleSelectChat(chat.id)}
+          >
+            <h4>{chat.displayId}</h4> {/* Display the chat's displayId */}
+            <i
+              className="bx bx-x-circle"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent parent click event
+                handleDeleteChat(chat.id); // Pass the correct id
+              }}
+            ></i>
           </div>
         ))}
       </div>
@@ -73,8 +91,8 @@ useEffect(() => {
         </div>
         <div className="chat">
           {messages.map((message, index) => (
-            <div key={index} className={message.type === "prompt" ? "prompt" : "response"}>
-              {message.text} <span>{message.timestamp}</span>
+            <div key={index} className={message.type === 'prompt' ? 'prompt' : 'response'}>
+              {message.text} <span>{message.timestamp}</span> {/* Display the timestamp */}
             </div>
           ))}
         </div>
