@@ -4,16 +4,20 @@ import './Chatbotapp.css';
 const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNewChat }) => {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState(chats[0]?.messages || []);
+  const [loading, setLoading] = useState(false); // Track loading state for "typing..."
 
+  // Effect to update messages when the active chat changes
   useEffect(() => {
     const activeChatObj = chats.find((chat) => chat.id === activeChat);
     setMessages(activeChatObj ? activeChatObj.messages : []);
-  }, [activeChat, chats]); // Ensure messages update correctly when activeChat changes
+  }, [activeChat, chats]);
 
+  // Handle input change
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
 
+  // Send message to OpenAI API
   const sendMessage = async () => {
     if (inputValue.trim() === '') return; // Avoid sending empty messages
 
@@ -26,7 +30,7 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInputValue('');
-
+    
     const updatedChats = chats.map((chat) => {
       if (chat.id === activeChat) {
         return { ...chat, messages: updatedMessages };
@@ -35,12 +39,15 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
     });
     setChats(updatedChats);
 
+    // Set loading state to true while waiting for response
+    setLoading(true);
+
     try {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer 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`, // Corrected Authorization header
+          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`, // Access environment variable
         },
         body: JSON.stringify({
           model: "gpt-3.5-turbo",
@@ -50,7 +57,8 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch data from the API');
+        const errorDetails = await response.json();
+        throw new Error(`API Error: ${errorDetails.error.message}`);
       }
 
       const data = await response.json();
@@ -74,10 +82,14 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
       setChats(updatedChatsWithResponse);
     } catch (error) {
       console.error("Error:", error);
-      alert("There was an error while sending the message.");
+      alert(`Error: ${error.message}`);
+    } finally {
+      // Set loading to false when done
+      setLoading(false);
     }
   };
 
+  // Handle Enter key press for sending messages
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -85,12 +97,14 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
     }
   };
 
+  // Select a specific chat
   const handleSelectChat = (id) => {
     setActiveChat(id);
   };
 
+  // Delete a specific chat
   const handleDeleteChat = (id) => {
-    const updatedChats = chats.filter((chat) => chat.id !== id); // Filter out the chat
+    const updatedChats = chats.filter((chat) => chat.id !== id);
     setChats(updatedChats);
 
     if (id === activeChat) {
@@ -109,16 +123,16 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
         </div>
         {chats.map((chat) => (
           <div
-            key={chat.id} // Using chat.id as the unique key here
+            key={chat.id}
             className={`chat-list-item ${chat.id === activeChat ? 'active' : ''}`}
             onClick={() => handleSelectChat(chat.id)}
           >
-            <h4>{chat.displayId}</h4> {/* Display the chat's displayId */}
+            <h4>{chat.displayId}</h4>
             <i
               className="bx bx-x-circle"
               onClick={(e) => {
                 e.stopPropagation(); // Prevent parent click event
-                handleDeleteChat(chat.id); // Pass the correct id
+                handleDeleteChat(chat.id);
               }}
             ></i>
           </div>
@@ -134,13 +148,15 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
         <div className="chat">
           {messages.map((message, index) => (
             <div key={index} className={message.type === 'prompt' ? 'prompt' : 'response'}>
-              {message.text} <span>{message.timestamp}</span> {/* Display the timestamp */}
+              {message.text} <span>{message.timestamp}</span>
             </div>
           ))}
         </div>
-        <div className="typing">Typing .........</div>
 
-        {/* New Wrapper for the Form */}
+        {/* Show typing indicator */}
+        {loading && <div className="typing">Typing .........</div>}
+
+        {/* Input Section */}
         <div className="chat-input-container">
           <form
             className="msg-form"
