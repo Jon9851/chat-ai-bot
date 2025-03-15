@@ -14,7 +14,7 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
     setInputValue(e.target.value);
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputValue.trim() === '') return; // Avoid sending empty messages
 
     const newMessage = {
@@ -34,6 +34,48 @@ const Chatbotapp = ({ onGoBack, chats, setChats, activeChat, setActiveChat, onNe
       return chat;
     });
     setChats(updatedChats);
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer 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`, // Corrected Authorization header
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: inputValue }],
+          max_tokens: 500,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch data from the API');
+      }
+
+      const data = await response.json();
+      const chatResponse = data.choices[0].message.content.trim();
+
+      const newResponse = {
+        type: 'response',
+        text: chatResponse,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+
+      const updatedMessagesWithResponse = [...updatedMessages, newResponse];
+      setMessages(updatedMessagesWithResponse);
+
+      const updatedChatsWithResponse = chats.map((chat) => {
+        if (chat.id === activeChat) {
+          return { ...chat, messages: updatedMessagesWithResponse };
+        }
+        return chat;
+      });
+      setChats(updatedChatsWithResponse);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("There was an error while sending the message.");
+    }
   };
 
   const handleKeyDown = (e) => {
